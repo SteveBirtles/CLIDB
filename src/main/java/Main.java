@@ -39,14 +39,16 @@ public class Main {
 
         try {
 
-            PreparedStatement ps = db.prepareStatement("SELECT Id, Thing, Quantity FROM Random");
+            PreparedStatement ps = db.prepareStatement("SELECT Id, Name, Quantity FROM Things");
 
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 int id = results.getInt(1);
-                String thing = results.getString(2);
+                String name = results.getString(2);
                 int quantity = results.getInt(3);
-                System.out.println(id + " : " + thing + " x " + quantity);
+                System.out.print("Id: " + id + ",  ");
+                System.out.print("Name: " + name + ",  ");
+                System.out.print("Quantity: " + quantity + "\n");
             }
 
         } catch (SQLException sqlEx) {
@@ -56,15 +58,47 @@ public class Main {
 
     }
 
-    private static void insertThing(int id, String thing, int quantity, Connection db) {
+    private static void insertThing(int id, String name, int quantity, Connection db) {
 
         try {
 
-            PreparedStatement ps = db.prepareStatement("INSERT INTO Random (Id, Thing, Quantity) VALUES (?, ?, ?)");
+            PreparedStatement ps = db.prepareStatement("INSERT INTO Things (Id, Name, Quantity) VALUES (?, ?, ?)");
 
             ps.setInt(1, id);
-            ps.setString(2, thing);
+            ps.setString(2, name);
             ps.setInt(3, quantity);
+
+            ps.execute();
+
+        } catch (SQLException sqlEx) {
+            System.out.println("Database error: " + sqlEx.getMessage());
+        }
+    }
+
+    private static void updateThing(int id, String name, int quantity, Connection db) {
+
+        try {
+
+            PreparedStatement ps = db.prepareStatement("UPDATE Things SET Name = ?, Quantity = ? WHERE Id = ?");
+
+            ps.setString(1, name);
+            ps.setInt(2, quantity);
+            ps.setInt(3, id);
+
+            ps.execute();
+
+        } catch (SQLException sqlEx) {
+            System.out.println("Database error: " + sqlEx.getMessage());
+        }
+    }
+
+    private static void deleteThing(int id, Connection db) {
+
+        try {
+
+            PreparedStatement ps = db.prepareStatement("DELETE FROM Things WHERE Id = ?");
+
+            ps.setInt(1, id);
 
             ps.execute();
 
@@ -75,9 +109,11 @@ public class Main {
 
     enum Mode {
         MENU,
-        LIST,
+        SELECT,
         INSERT,
-        EXIT
+        UPDATE,
+        DELETE,
+        QUIT
     }
 
     public static void main(String[] args) {
@@ -86,7 +122,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         Mode mode = Mode.MENU;
 
-        while (mode != Mode.EXIT) {
+        while (mode != Mode.QUIT) {
 
             System.out.println();
 
@@ -96,23 +132,29 @@ public class Main {
 
                     System.out.println("Please choose an option:");
                     System.out.println("L - List all the things.");
-                    System.out.println("I - Insert a new thing.");
-                    System.out.println("E - Exit.");
+                    System.out.println("A - Add a new thing.");
+                    System.out.println("E - Edit an existing thing.");
+                    System.out.println("D - Delete an existing thing.");
+                    System.out.println("Q - Quit.");
 
                     String choice = scanner.next();
                     if (choice.toUpperCase().equals("L")) {
-                        mode = Mode.LIST;
-                    } else if (choice.toUpperCase().equals("I")) {
+                        mode = Mode.SELECT;
+                    } else if (choice.toUpperCase().equals("A")) {
                         mode = Mode.INSERT;
                     } else if (choice.toUpperCase().equals("E")) {
-                        mode = Mode.EXIT;
+                        mode = Mode.UPDATE;
+                    } else if (choice.toUpperCase().equals("D")) {
+                        mode = Mode.DELETE;
+                    } else if (choice.toUpperCase().equals("Q")) {
+                        mode = Mode.QUIT;
                     } else {
                         System.out.println("Unrecognised choice!");
                     }
 
                     break;
 
-                case LIST:
+                case SELECT:
 
                     listThings(myDB);
 
@@ -122,14 +164,46 @@ public class Main {
                 case INSERT:
 
                     System.out.print("New thing id? ");
-                    String id = scanner.next();
-                    System.out.print("New thing name? ");
-                    String thing = scanner.next();
+                    String insertId = scanner.next();
+                    System.out.print("New name? ");
+                    String insertThing = scanner.next();
                     System.out.print("New quantity? ");
-                    String quantity = scanner.next();
+                    String insertQuantity = scanner.next();
 
                     try {
-                        insertThing(Integer.parseInt(id), thing, Integer.parseInt(quantity), myDB);
+                        insertThing(Integer.parseInt(insertId), insertThing, Integer.parseInt(insertQuantity), myDB);
+                    } catch (NumberFormatException ne) {
+                        System.out.println("Number format error: " + ne.getMessage());
+                    }
+
+                    mode = Mode.MENU;
+                    break;
+
+                case UPDATE:
+
+                    System.out.print("Id of thing to edit? ");
+                    String updateId = scanner.next();
+                    System.out.print("Updated name? ");
+                    String updateThing = scanner.next();
+                    System.out.print("Updated quantity? ");
+                    String updateQuantity = scanner.next();
+
+                    try {
+                        updateThing(Integer.parseInt(updateId), updateThing, Integer.parseInt(updateQuantity), myDB);
+                    } catch (NumberFormatException ne) {
+                        System.out.println("Number format error: " + ne.getMessage());
+                    }
+
+                    mode = Mode.MENU;
+                    break;
+
+                case DELETE:
+
+                    System.out.print("Id of thing to delete? ");
+                    String deleteId = scanner.next();
+
+                    try {
+                        deleteThing(Integer.parseInt(deleteId), myDB);
                     } catch (NumberFormatException ne) {
                         System.out.println("Number format error: " + ne.getMessage());
                     }
@@ -148,3 +222,4 @@ public class Main {
     }
 
 }
+
