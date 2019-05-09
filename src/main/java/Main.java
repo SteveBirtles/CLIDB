@@ -4,18 +4,14 @@ import java.util.Scanner;
 public class Main {
 
 
-    private static Connection openDatabase(String dbFile)
-    {
+    private static Connection openDatabase(String dbFile) {
         Connection db = null;
 
-        try
-        {
+        try {
             Class.forName("org.sqlite.JDBC");
             db = DriverManager.getConnection("jdbc:sqlite:resources/" + dbFile);
             System.out.println("Database connection successfully established.");
-        }
-        catch (Exception exception)
-        {
+        } catch (Exception exception) {
             System.out.println("Database connection error: " + exception.getMessage());
         }
 
@@ -23,14 +19,11 @@ public class Main {
 
     }
 
-    private static void closeDatabase(Connection db)
-    {
+    private static void closeDatabase(Connection db) {
         try {
             db.close();
             System.out.println("Disconnected from database.");
-        }
-        catch (Exception exception)
-        {
+        } catch (Exception exception) {
             System.out.println("Database disconnection error: " + exception.getMessage());
         }
     }
